@@ -1,0 +1,39 @@
+services:
+  pihole:
+    image: pihole/pihole:latest
+    container_name: pihole
+    environment:
+      TZ: 'Europe/Berlin'
+      WEBPASSWORD: 'secure this'
+    volumes:
+      - './etc-pihole/:/etc/pihole/'
+      - './etc-dnsmasq.d/:/etc/dnsmasq.d/'
+    restart: unless-stopped
+  caddy:
+    image: caddy:latest
+    container_name: caddy
+    ports:
+      - '80:80'
+      - '443:443'
+    volumes:
+      - './Caddyfile:/etc/caddy/Caddyfile'
+      - './caddy_data:/data'
+      - './caddy_config:/config'
+    restart: unless-stopped
+  dnsproxy:
+    image: adguard/dnsproxy:latest
+    container_name: dnsproxy
+    ports:
+      - '853:853'
+    restart: unless-stopped
+    volumes:
+      - './caddy_data:/data'
+    command:
+      - -u
+      - pihole:53
+      - -c
+      - /data/caddy/certificates/acme-v02.api.letsencrypt.org-directory/dns01.example.com/dns01.example.com.crt
+      - -k
+      - /data/caddy/certificates/acme-v02.api.letsencrypt.org-directory/dns01.example.com/dns01.example.com.key
+      - -t
+      - "853"

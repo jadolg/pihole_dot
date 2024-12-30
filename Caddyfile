@@ -1,0 +1,4 @@
+dns01.example.com {
+  reverse_proxy pihole:80
+  redir / /admin{uri}
+}
